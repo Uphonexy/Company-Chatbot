@@ -1,22 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPolicies, uploadPolicy, deletePolicy } from '../api/chatApi';
+import FileUpload from '../components/FileUpload';
 
 const AdminDashboard = () => {
   const [policies, setPolicies] = useState([]);
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  
+  const [deleteError, setDeleteError] = useState('');
+
   const navigate = useNavigate();
   const token = localStorage.getItem('adminToken');
 
   useEffect(() => {
-    if (!token) {
-      navigate('/admin/login');
-      return;
-    }
     loadPolicies();
   }, [token, navigate]);
 
@@ -31,35 +25,13 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  const handleUpload = async () => {
-    if (!file) return;
-    setUploading(true);
-    setMessage('');
-    setError('');
-    
-    try {
-      const res = await uploadPolicy(file, token);
-      setMessage(res.message);
-      setFile(null);
-      loadPolicies();
-    } catch (err) {
-       setError(err.response?.data?.error || 'Upload failed');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this policy?')) {
       try {
         await deletePolicy(id, token);
         loadPolicies();
       } catch (err) {
-        setError('Failed to delete policy');
+        setDeleteError('Failed to delete policy');
       }
     }
   };
@@ -75,31 +47,13 @@ const AdminDashboard = () => {
         <h1>Policy Management</h1>
         <button onClick={handleLogout} className="logout-button danger-button">Logout</button>
       </header>
-      
+
       <div className="dashboard-content">
-        <div className="upload-section glass-panel">
-          <h3>Upload New Policy (.pdf or .docx)</h3>
-          {message && <div className="success-message">{message}</div>}
-          {error && <div className="error-message">{error}</div>}
-          <div className="upload-controls">
-            <input 
-              type="file" 
-              accept=".pdf,.docx" 
-              onChange={handleFileChange} 
-              className="file-input"
-            />
-            <button 
-              onClick={handleUpload} 
-              disabled={!file || uploading}
-              className="primary-button"
-            >
-              {uploading ? 'Uploading...' : 'Upload Policy'}
-            </button>
-          </div>
-        </div>
+        <FileUpload token={token} onUploadSuccess={loadPolicies} />
 
         <div className="policies-list glass-panel">
           <h3>Current Policies</h3>
+          {deleteError && <div className="error-message">{deleteError}</div>}
           <table>
             <thead>
               <tr>
@@ -122,7 +76,7 @@ const AdminDashboard = () => {
               ))}
               {policies.length === 0 && (
                 <tr>
-                  <td colSpan="3" style={{textAlign: 'center'}}>No policies uploaded yet.</td>
+                  <td colSpan="3" style={{ textAlign: 'center' }}>No policies uploaded yet.</td>
                 </tr>
               )}
             </tbody>

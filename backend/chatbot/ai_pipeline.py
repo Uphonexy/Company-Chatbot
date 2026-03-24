@@ -54,27 +54,8 @@ def delete_old_chunks(filename):
         collection_name=COLLECTION_NAME,
         connection=DB_URL,
     )
-    # Get all documents for filename and delete them
-    # Note: PGVector in langchain doesn't have a direct delete by metadata method exposed simply.
-    # We will delete using the store's underlying connection or the appropriate delete method.
-    # Actually, pgvector's python lib lets us execute raw SQL if needed, but let's try direct deletion if available on store, or just use raw DB query against langchain_pg_embedding.
-    # To keep things robust via psycopg2:
-    import psycopg2
     try:
-        conn = psycopg2.connect(
-            dbname=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            host=settings.DATABASES['default']['HOST'],
-            port=settings.DATABASES['default']['PORT']
-        )
-        cur = conn.cursor()
-        # Delete from the embedding table where the metadata JSON contains the source filename
-        # Table created by Langchain PGVector is typically langchain_pg_embedding
-        cur.execute("DELETE FROM langchain_pg_embedding WHERE cmetadata->>'source' = %s", (filename,))
-        conn.commit()
-        cur.close()
-        conn.close()
+        store.delete(filter={"source": filename})
     except Exception as e:
         print(f"Error deleting old chunks: {e}")
 
@@ -131,7 +112,7 @@ def ask_ollama(prompt):
         "model": "llama3",
         "prompt": prompt,
         "stream": False,
-        "max_tokens": 500
+        "num_predict": 500
     }
     try:
         response = requests.post(url, json=data)

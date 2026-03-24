@@ -42,7 +42,7 @@ Open a terminal in the root directory:
 
 2. Install dependencies:
    ```bash
-   pip install django djangorestframework psycopg2-binary pgvector langchain langchain-community langchain-core langchain-text-splitters sentence-transformers transformers torch pypdf python-docx docx2txt django-cors-headers requests
+   pip install django djangorestframework psycopg2-binary pgvector langchain langchain-community langchain-core langchain-text-splitters langchain-postgres langchain-huggingface sentence-transformers transformers torch pypdf python-docx docx2txt django-cors-headers requests
    ```
 
 3. Navigate to `backend/` and run migrations to initialize the database:
