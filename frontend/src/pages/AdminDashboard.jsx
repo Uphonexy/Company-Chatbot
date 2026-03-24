@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPolicies, uploadPolicy, deletePolicy } from '../api/chatApi';
+import { getPolicies, deletePolicy } from '../api/chatApi';
 import FileUpload from '../components/FileUpload';
 
 const AdminDashboard = () => {
@@ -9,10 +9,6 @@ const AdminDashboard = () => {
 
   const navigate = useNavigate();
   const token = localStorage.getItem('adminToken');
-
-  useEffect(() => {
-    loadPolicies();
-  }, [token, navigate]);
 
   const loadPolicies = async () => {
     try {
@@ -26,11 +22,12 @@ const AdminDashboard = () => {
   };
 
   const handleDelete = async (id) => {
+    setDeleteError('');
     if (window.confirm('Are you sure you want to delete this policy?')) {
       try {
         await deletePolicy(id, token);
         loadPolicies();
-      } catch (err) {
+      } catch {
         setDeleteError('Failed to delete policy');
       }
     }
@@ -40,6 +37,11 @@ const AdminDashboard = () => {
     localStorage.removeItem('adminToken');
     navigate('/admin/login');
   };
+
+  useEffect(() => {
+    loadPolicies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="admin-dashboard">
